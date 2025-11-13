@@ -1,0 +1,95 @@
+name: Create Release Package
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get version from tag
+        id: get_version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+          echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Update version in manifest
+        run: |
+          sed -i "s/<version>.*<\/version>/<version>${{ steps.get_version.outputs.VERSION }}<\/version>/" maxsize.xml
+
+      - name: Create package directory
+        run: |
+          mkdir -p package
+          rsync -av --exclude='.git' \
+                    --exclude='.github' \
+                    --exclude='package' \
+                    --exclude='README.md' \
+                    --exclude='.gitignore' \
+                    ./ package/
+
+      - name: Create ZIP package
+        run: |
+          cd package
+          zip -r ../plg_media-action_maxsize_${{ steps.get_version.outputs.VERSION }}.zip .
+          cd ..
+
+      - name: Generate download URL
+        id: download_url
+        run: |
+          DOWNLOAD_URL="https://github.com/${{ github.repository }}/releases/download/${{ steps.get_version.outputs.TAG_NAME }}/plg_media-action_maxsize_${{ steps.get_version.outputs.VERSION }}.zip"
+          echo "DOWNLOAD_URL=${DOWNLOAD_URL}" >> $GITHUB_OUTPUT
+
+      - name: Update update.xml
+        run: |
+          cat > update.xml << 'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <updates>
+            <update>
+              <name>Media Action - Max Size</name>
+              <description>Automatically resizes uploaded images to a maximum dimension on the longest side</description>
+              <element>maxsize</element>
+              <type>plugin</type>
+              <folder>media-action</folder>
+              <client>0</client>
+              <version>${{ steps.get_version.outputs.VERSION }}</version>
+              <infourl title="Media Action - Max Size">https://github.com/${{ github.repository }}</infourl>
+              <downloads>
+                <downloadurl type="full" format="zip">${{ steps.download_url.outputs.DOWNLOAD_URL }}</downloadurl>
+              </downloads>
+              <tags>
+                <tag>stable</tag>
+              </tags>
+              <maintainer>HKweb</maintainer>
+              <maintainerurl>https://hkweb.nl</maintainerurl>
+              <targetplatform name="joomla" version="(4\.[0-4]|5\.[0-9]|6\.[0-9])" />
+              <php_minimum>8.1.0</php_minimum>
+            </update>
+          </updates>
+          EOF
+
+      - name: Commit and push update.xml
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add update.xml
+          git diff-index --quiet HEAD || git commit -m "Update update.xml for version ${{ steps.get_version.outputs.VERSION }}"
+          git push origin HEAD:main
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: plg_media-action_maxsize_${{ steps.get_version.outputs.VERSION }}.zip
+          generate_release_notes: true
+          name: Release ${{ steps.get_version.outputs.TAG_NAME }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

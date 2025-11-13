@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<extension type="plugin" group="media-action" method="upgrade">
+	<name>plg_media-action_maxsize</name>
+	<author>HKweb</author>
+	<creationDate>November 2025</creationDate>
+	<copyright>Copyright (C) 2025 HKweb</copyright>
+	<license>GNU General Public License version 3; see LICENSE.txt</license>
+	<authorEmail>info@hkweb.nl</authorEmail>
+	<authorUrl>https://hkweb.nl</authorUrl>
+	<version>1.0.0</version>
+	<description>PLG_MEDIA-ACTION_MAXSIZE_XML_DESCRIPTION</description>
+	<namespace path="src">Joomla\Plugin\MediaAction\Maxsize</namespace>
+	<files>
+		<folder plugin="maxsize">services</folder>
+		<folder>src</folder>
+	</files>
+	<languages>
+		<language tag="en-GB">language/en-GB/plg_media-action_maxsize.ini</language>
+		<language tag="en-GB">language/en-GB/plg_media-action_maxsize.sys.ini</language>
+		<language tag="nl-NL">language/nl-NL/plg_media-action_maxsize.ini</language>
+		<language tag="nl-NL">language/nl-NL/plg_media-action_maxsize.sys.ini</language>
+	</languages>
+	<config>
+		<fields name="params">
+			<fieldset
+				name="basic"
+				label="PLG_MEDIA-ACTION_MAXSIZE_FIELDSET_LABEL"
+				description="PLG_MEDIA-ACTION_MAXSIZE_FIELDSET_DESC"
+			>
+				<field
+					name="max_dimension"
+					type="text"
+					label="PLG_MEDIA-ACTION_MAXSIZE_MAX_DIMENSION_LABEL"
+					description="PLG_MEDIA-ACTION_MAXSIZE_MAX_DIMENSION_DESC"
+					default="3000"
+					addonAfter="px"
+					filter="integer"
+				/>
+			</fieldset>
+		</fields>
+	</config>
+	<updateservers>
+		<server type="extension" name="Media Action - Max Size Update Server">https://raw.githubusercontent.com/hans2103/plg_media-action_maxsize/main/update.xml</server>
+	</updateservers>
+</extension>
